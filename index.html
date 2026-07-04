@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSR Value Maxxer - Chase Sapphire Reserve Dashboard</title>
+  <meta name="description" content="Calculate and track the absolute, face, and actual value of your Chase Sapphire Reserve card rewards, points, and perks.">
+  <link rel="stylesheet" href="style.css">
+  <!-- Google Fonts: Outfit and Inter for a premium, modern feel -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Lucide Icons for premium visual interface elements -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <div class="header-logo">
+        <i data-lucide="gem" class="logo-icon"></i>
+        <div class="logo-text">
+          <h1>Chase Sapphire Reserve</h1>
+          <p>Is it worth it?</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="btn-theme-toggle" class="btn btn-secondary" title="Toggle Light/Dark Theme">
+          <i data-lucide="sun" id="theme-toggle-icon"></i>
+        </button>
+        <button id="btn-export" class="btn btn-secondary">
+          <i data-lucide="download"></i> Export Data
+        </button>
+        <button id="btn-import-trigger" class="btn btn-secondary">
+          <i data-lucide="upload"></i> Import Data
+        </button>
+        <input type="file" id="file-import" accept=".json,.csv" style="display: none;">
+        <button id="btn-reset" class="btn-danger-icon" title="Reset Dashboard to Defaults">
+          <i data-lucide="rotate-ccw"></i>
+        </button>
+      </div>
+    </header>
+
+    <main class="dashboard-grid">
+      <!-- Top Level Metrics -->
+      <section class="metrics-row" aria-label="Key Performance Indicators">
+        <div class="metric-card annual-fee-card">
+          <div class="metric-label">
+            <span>Annual Fee</span>
+            <i data-lucide="credit-card" class="metric-icon"></i>
+          </div>
+          <div class="metric-val" id="val-annual-fee">$795</div>
+          <div class="metric-sub" id="sub-annual-fee">Base: $795 • AUs: 0</div>
+        </div>
+
+        <div class="metric-card personal-value-card">
+          <div class="metric-label">
+            <span>Total Personal Value</span>
+            <i data-lucide="heart" class="metric-icon"></i>
+          </div>
+          <div class="metric-val" id="val-personal-value">$0.00</div>
+          <div class="metric-sub" id="sub-personal-value">Face Value: $0.00</div>
+        </div>
+
+        <div class="metric-card roi-card" id="card-net-roi">
+          <div class="metric-label">
+            <span>Net Value (ROI)</span>
+            <i data-lucide="trending-up" class="metric-icon" id="roi-icon"></i>
+          </div>
+          <div class="metric-val" id="val-net-roi">$0.00</div>
+          <div class="metric-sub" id="sub-net-roi">Personal Value - Annual Fee</div>
+        </div>
+
+        <div class="metric-card cashback-card">
+          <div class="metric-label">
+            <span>2% Cashback Alternative</span>
+            <i data-lucide="scale" class="metric-icon"></i>
+          </div>
+          <div class="metric-val" id="val-cashback-compare">$0.00</div>
+          <div class="metric-sub" id="sub-cashback-compare">CSR Net Value difference: $0.00</div>
+        </div>
+      </section>
+
+      <!-- Sidebar / Controls -->
+      <aside class="sidebar-panel">
+        <div class="glass-panel control-section">
+          <h2><i data-lucide="sliders"></i> Valuations &amp; Settings</h2>
+          
+          <div class="form-group">
+            <div class="slider-header">
+              <label for="slider-point-val">UR Point Valuation</label>
+              <span class="slider-bubble" id="bubble-point-val">1.50¢</span>
+            </div>
+            <input type="range" id="slider-point-val" min="0.8" max="3.0" step="0.05" value="1.50">
+            <div class="slider-labels">
+              <span>0.8¢ (Cash Back)</span>
+              <span>1.5¢ (Portal)</span>
+              <span>3.0¢ (Partner)</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="input-au-count">Authorized Users ($195 / year each)</label>
+            <div class="number-stepper">
+              <button type="button" id="btn-au-dec" class="stepper-btn">-</button>
+              <input type="number" id="input-au-count" value="0" min="0" max="10" readonly>
+              <button type="button" id="btn-au-inc" class="stepper-btn">+</button>
+            </div>
+          </div>
+
+          <div class="card-summary-points">
+            <div class="points-label">Points This Year</div>
+            <div class="points-value" id="val-points-total">0 pts</div>
+            <div class="points-dollar" id="val-points-dollar">$0.00</div>
+            
+            <div class="points-account-input-group" style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed rgba(255,255,255,0.1);">
+              <label for="input-total-points" style="font-size: 0.75rem; color: var(--color-text-muted); display: block; margin-bottom: 6px;">Total Points in Account</label>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <input type="number" id="input-total-points" placeholder="0" min="0" step="1000" style="background: var(--color-inner-bg); border: 1px solid var(--color-panel-border); color: var(--color-text-bright); border-radius: 6px; padding: 6px 10px; font-size: 0.8rem; width: 100%; flex-grow: 1; outline: none; transition: border-color 0.2s ease;">
+                <span id="val-total-points-dollar" style="font-size: 0.8rem; font-weight: 600; color: var(--color-gold); min-width: 75px; text-align: right;">$0.00</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-panel chart-section">
+          <h2><i data-lucide="pie-chart"></i> Value Comparison</h2>
+          <div class="custom-chart-container">
+            <!-- Custom CSS Chart Bars -->
+            <div class="chart-bar-wrapper">
+              <div class="chart-bar-label">Annual Fee</div>
+              <div class="chart-bar-track">
+                <div class="chart-bar-fill fill-fee" id="chart-fill-fee" style="width: 100%;"></div>
+              </div>
+              <div class="chart-bar-val" id="chart-val-fee">$795</div>
+            </div>
+            <div class="chart-bar-wrapper">
+              <div class="chart-bar-label">Face Value</div>
+              <div class="chart-bar-track">
+                <div class="chart-bar-fill fill-face" id="chart-fill-face" style="width: 0%;"></div>
+              </div>
+              <div class="chart-bar-val" id="chart-val-face">$0.00</div>
+            </div>
+            <div class="chart-bar-wrapper">
+              <div class="chart-bar-label">Personal Value</div>
+              <div class="chart-bar-track">
+                <div class="chart-bar-fill fill-personal" id="chart-fill-personal" style="width: 0%;"></div>
+              </div>
+              <div class="chart-bar-val" id="chart-val-personal">$0.00</div>
+            </div>
+          </div>
+          <div class="chart-legend">
+            <span class="legend-item"><span class="bullet fee"></span>Fee</span>
+            <span class="legend-item"><span class="bullet face"></span>Face</span>
+            <span class="legend-item"><span class="bullet personal"></span>Personal</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Content Area -->
+      <section class="main-content-panel">
+        <!-- Perks Ledger -->
+        <div class="glass-panel perks-panel">
+          <div class="section-header">
+            <h2><i data-lucide="shield-check"></i> Perks &amp; Statement Credits</h2>
+            <button id="btn-add-custom-perk" class="btn btn-primary btn-sm">
+              <i data-lucide="plus"></i> Add Custom Perk
+            </button>
+          </div>
+          <div class="table-container">
+            <table class="data-table" id="table-perks">
+              <thead>
+                <tr>
+                  <th style="width: 70px; text-align: center;">Active</th>
+                  <th>Perk / Credit Name</th>
+                  <th style="width: 440px;">Personal Valuation</th>
+                  <th style="width: 100px; text-align: center;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-perks">
+                <!-- Javascript will insert standard and custom perks here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Transactions Ledger -->
+        <div class="glass-panel ledger-panel">
+          <div class="section-header">
+            <h2><i data-lucide="history"></i> Point Activity Ledger</h2>
+            <div class="header-buttons">
+              <button id="btn-add-earn" class="btn btn-success btn-sm">
+                <i data-lucide="plus-circle"></i> Log Point Earnings
+              </button>
+              <button id="btn-add-redeem" class="btn btn-primary btn-sm">
+                <i data-lucide="minus-circle"></i> Log Point Redemption
+              </button>
+            </div>
+          </div>
+          <div class="table-container">
+            <table class="data-table" id="table-ledger">
+              <thead>
+                <tr>
+                  <th>Description</th>
+                  <th style="width: 100px;">Type</th>
+                  <th style="width: 110px; text-align: right;">Points</th>
+                  <th style="width: 110px; text-align: right;">Face Value</th>
+                  <th style="width: 130px; text-align: right;">Personal Value</th>
+                  <th style="width: 120px; text-align: right;">Realized CPP</th>
+                  <th style="width: 100px; text-align: center;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-ledger">
+                <!-- Javascript will render points earnings and redemptions -->
+                <tr>
+                  <td colspan="7" class="empty-state">No points transactions recorded. Log your first earn or redemption!</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <p>CSR Value Maxxer • Designed for Chase Sapphire Reserve Program Refresh (June 2025)</p>
+      <p class="footer-note">All data is kept locally on your browser and is never uploaded anywhere.</p>
+    </footer>
+  </div>
+
+  <!-- Modal Dialog: Add/Edit Custom Perk -->
+  <dialog id="dialog-perk" class="glass-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="dialog-perk-title">Add Custom Perk</h3>
+        <button class="btn-close-modal" data-close-target="dialog-perk"><i data-lucide="x"></i></button>
+      </div>
+      <form id="form-perk" method="dialog">
+        <input type="hidden" id="perk-id">
+        <div class="form-group">
+          <label for="perk-name">Perk Name</label>
+          <input type="text" id="perk-name" required placeholder="e.g. Peloton Credit, Restaurant Discount">
+        </div>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label for="perk-face">Annual Face Value ($)</label>
+            <input type="number" id="perk-face" min="0" step="0.01" required placeholder="e.g. 120.00">
+          </div>
+          <div class="form-group">
+            <label for="perk-personal">Personal Valuation ($)</label>
+            <input type="number" id="perk-personal" min="0" step="0.01" required placeholder="e.g. 60.00">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-target="dialog-perk">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Perk</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- Modal Dialog: Log Point Earnings -->
+  <dialog id="dialog-earn" class="glass-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Log Point Earnings</h3>
+        <button class="btn-close-modal" data-close-target="dialog-earn"><i data-lucide="x"></i></button>
+      </div>
+      <form id="form-earn" method="dialog">
+        <div class="form-group">
+          <label for="earn-name">Description</label>
+          <input type="text" id="earn-name" required placeholder="e.g. Q1 Dining Spend, Sign-Up Bonus">
+        </div>
+        <div class="form-group">
+          <label for="earn-multiplier">Earning Category (Multipliers)</label>
+          <select id="earn-multiplier">
+            <option value="8">Chase Travel Portal / The Edit (8x)</option>
+            <option value="4">Direct Flights / Hotels (4x)</option>
+            <option value="3">Dining / Worldwide Restaurants (3x)</option>
+            <option value="1">All Other Purchases (1x)</option>
+            <option value="custom">Custom Point Input (No Multiplier)</option>
+          </select>
+        </div>
+        <div class="form-grid-2" id="earn-calc-inputs">
+          <div class="form-group">
+            <label for="earn-spend">Spend Amount ($)</label>
+            <input type="number" id="earn-spend" min="0" step="0.01" placeholder="e.g. 500.00">
+          </div>
+          <div class="form-group">
+            <label for="earn-calculated-points">Points Yield</label>
+            <input type="number" id="earn-calculated-points" readonly placeholder="Calculated points">
+          </div>
+        </div>
+        <div class="form-group hidden" id="earn-custom-points-group">
+          <label for="earn-points">Points Earned</label>
+          <input type="number" id="earn-points" min="1" step="1" placeholder="e.g. 60000">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-target="dialog-earn">Cancel</button>
+          <button type="submit" class="btn btn-success">Add Earnings</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- Modal Dialog: Log Point Redemption -->
+  <dialog id="dialog-redeem" class="glass-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Log Point Redemption</h3>
+        <button class="btn-close-modal" data-close-target="dialog-redeem"><i data-lucide="x"></i></button>
+      </div>
+      <form id="form-redeem" method="dialog">
+        <div class="form-group">
+          <label for="redeem-name">Description / Trip Name</label>
+          <input type="text" id="redeem-name" required placeholder="e.g. Hyatt Regency Maui Booking">
+        </div>
+        <div class="form-grid-3">
+          <div class="form-group">
+            <label for="redeem-points">Points Redeemed</label>
+            <input type="number" id="redeem-points" min="1" step="1" required placeholder="e.g. 30000">
+          </div>
+          <div class="form-group">
+            <label for="redeem-face">Retail Cost ($)</label>
+            <input type="number" id="redeem-face" min="0" step="0.01" required placeholder="e.g. 600.00">
+          </div>
+          <div class="form-group">
+            <label for="redeem-personal">Personal Valuation ($)</label>
+            <input type="number" id="redeem-personal" min="0" step="0.01" required placeholder="e.g. 250.00">
+            <button type="button" id="btn-match-face" class="btn-subtext-action">Match Retail</button>
+          </div>
+        </div>
+        <div class="modal-info-bar">
+          <div class="info-block">
+            <span class="block-label">Retail Value (Face CPP)</span>
+            <span class="block-val" id="val-preview-face-cpp">0.00¢</span>
+          </div>
+          <div class="info-block">
+            <span class="block-label">Personal Value (Actual CPP)</span>
+            <span class="block-val" id="val-preview-personal-cpp">0.00¢</span>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-target="dialog-redeem">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add Redemption</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

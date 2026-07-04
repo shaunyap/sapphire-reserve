@@ -1,0 +1,9 @@
+# Ignore all Chase Statement CSV exports and JSON state backups
+data/
+*.csv
+*.CSV
+*.json
+*.JSON
+
+# OS Metadata
+.DS_Store
